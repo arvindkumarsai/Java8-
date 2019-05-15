@@ -1,9 +1,16 @@
 package com.arvind.poi.example;
 
 
+import com.opencsv.bean.ColumnPositionMappingStrategy;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,36 +27,53 @@ public class POIUtility {
 
     public static void main(String[] args) throws Exception {
 
-        Sheet sheet0 =  ExcelUtils.getWorkSheetFromFileParams(new File("D://test//PBS_Data_01.xlsx"), 0);
+        Sheet sheet0 =  ExcelUtils.getWorkSheetFromFileParams(new File("D://test//PBS_Benefit_many.xlsx"), 0);
         Row row6 = sheet0.getRow(TYPE_ROW);
-        resolveType(row6.getCell(TYPE_CELL).toString(), sheet0);
-
-
+        List<PBSData> pbsDataList =  extractPBSValues(row6.getCell(TYPE_CELL).toString(), sheet0);
+        System.out.println("Total PBS Records : " + pbsDataList.size());
+        writeTOCSV(pbsDataList);
     }
 
-    private static void resolveType(String s, Sheet sheet0) {
+    private static void writeTOCSV(List<PBSData> pbsDataList) throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+        // Create Mapping Strategy to arrange the
+        // column name in order
+        // Creating writer class to generate
+        // csv file
+        FileWriter writer = new
+                FileWriter("output.csv");
+        ColumnPositionMappingStrategy mappingStrategy=
+                new ColumnPositionMappingStrategy();
+        mappingStrategy.setType(PBSData.class);
+
+        // Arrange column name as provided in below array.
+        String[] columns = new String[]
+                { "RPTType", "PBS_CODE", "month", "state", "value" };
+        mappingStrategy.setColumnMapping(columns);
+
+        // Createing StatefulBeanToCsv object
+        StatefulBeanToCsvBuilder<PBSData> builder=
+                new StatefulBeanToCsvBuilder(writer);
+        StatefulBeanToCsv beanWriter =
+                builder.withMappingStrategy(mappingStrategy).build();
+
+        // Write list to StatefulBeanToCsv object
+        beanWriter.write(pbsDataList);
+        writer.close();
+    }
+
+    private static  List<PBSData> extractPBSValues( String reportType, Sheet sheet0) {
 
         int numOfRows = sheet0.getLastRowNum();
         extractStateMap(sheet0, TYPE_ROW-1);
-        if("$Benefit".equalsIgnoreCase(s)) {
-            readBenefitValues(sheet0, numOfRows);
 
-        } /*else {
-
-        }*/
-    }
-
-    private static void readBenefitValues(Sheet sheet0, int numOfRows) {
         System.out.println("Read Benefit Sheet");
         List<PBSData> pbsDataList = new ArrayList<>();
         String month,rptType, pbsCode=month=rptType =pbsCode= "";
         int counter = 0;
         for(int rowNum = 6; rowNum < numOfRows ; rowNum++ ) {
 
-
                 Row row = sheet0.getRow(rowNum);
                 int numOfCellPerRow = row.getLastCellNum();
-
 
                 for(int j =3 ; j < numOfCellPerRow - 1 ; j++) {
 
@@ -61,18 +85,16 @@ public class POIUtility {
                             rptType = row.getCell(1).toString();
                             counter = 0;
                         } else {
-
                             if(row.getCell(1).toString().equalsIgnoreCase("RPBS")
                                     || row.getCell(1).toString().equalsIgnoreCase("Total") ) {
-
                                 rowNum=rowNum+counter;
-
-                                break; // w
+                                break;
                             }
-
                         }
                     }
-
+                    if(row.getCell(2).toString().isEmpty()) {
+                        break;
+                    }
                     if(!row.getCell(2).toString().equalsIgnoreCase("Total")) {
                         month = row.getCell(2).toString();
                         counter++;
@@ -85,11 +107,10 @@ public class POIUtility {
                         break;
                     }
                 }
-
-
             }
 
         pbsDataList.forEach( System.out::println );
+        return  pbsDataList;
         }
 
     private static void generatePBSObject(String finalPbsCode, String rptType, String month, Row row, List<PBSData> pbsDataList) {
@@ -126,6 +147,5 @@ public class POIUtility {
                         toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
                                 LinkedHashMap::new));
        stateMap.forEach((k,v)-> System.out.println("   Map key " + k +"  " +v));
-
     }
 }

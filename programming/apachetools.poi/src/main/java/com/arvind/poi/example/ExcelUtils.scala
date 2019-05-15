@@ -13,18 +13,14 @@ object ExcelUtils {
   @throws[EncryptedDocumentException]
   @throws[InvalidFormatException]
   @throws[IOException]
-  def readFromExcel(filePath: File, workSheet : Int ): Workbook = {
+  def getWorkSheetFromFileParams(filePath: File, workSheetNumber : Int ): Sheet = try {
+    val wb = WorkbookFactory.create(filePath)
+    val sheet = wb.getSheetAt(workSheetNumber)
+    return  sheet
 
-    var wb: Workbook = null
-    try {
-      wb = WorkbookFactory.create(filePath)
-
-      val sheet = wb.getSheetAt(0)
-    } catch {
-      case e: InvalidFormatException =>
-        e.printStackTrace()
-    }
-    wb
+  } catch {
+    case e: InvalidFormatException => println(e.printStackTrace())
+      null
   }
 
 
