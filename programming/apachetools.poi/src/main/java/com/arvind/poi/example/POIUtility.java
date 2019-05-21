@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.*;
 import static java.util.Map.Entry.*;
-import java.io.File;
+
 import java.util.*;
 
 public class POIUtility {
@@ -27,7 +27,7 @@ public class POIUtility {
 
     public static void main(String[] args) throws Exception {
 
-        Sheet sheet0 =  ExcelUtils.getWorkSheetFromFileParams(new File("D://test//PBS_Benefit_many.xlsx"), 0);
+            Sheet sheet0 =  ExcelUtils.getWorkSheetFromFileParams("D://test//PBS_Data_1873995840.1.xlsx", 0);
         Row row6 = sheet0.getRow(TYPE_ROW);
         List<PBSData> pbsDataList =  extractPBSValues(row6.getCell(TYPE_CELL).toString(), sheet0);
         System.out.println("Total PBS Records : " + pbsDataList.size());
@@ -66,7 +66,7 @@ public class POIUtility {
         int numOfRows = sheet0.getLastRowNum();
         extractStateMap(sheet0, TYPE_ROW-1);
 
-        System.out.println("Read Benefit Sheet");
+        System.out.println("Reading PBS Data");
         List<PBSData> pbsDataList = new ArrayList<>();
         String month,rptType, pbsCode=month=rptType =pbsCode= "";
         int counter = 0;
@@ -102,7 +102,7 @@ public class POIUtility {
                         break;
                     }
                     if(row.getCell(j) != null &&  !row.getCell(j).toString().isEmpty()) {
-                        System.out.println(counter + " :" +row.getCell(3));
+
                         generatePBSObject(pbsCode, rptType, month, row, pbsDataList);
                         break;
                     }
@@ -146,6 +146,6 @@ public class POIUtility {
                 .collect(
                         toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
                                 LinkedHashMap::new));
-       stateMap.forEach((k,v)-> System.out.println("   Map key " + k +"  " +v));
+      // stateMap.forEach((k,v)-> System.out.println("   Map key " + k +"  " +v));
     }
 }
